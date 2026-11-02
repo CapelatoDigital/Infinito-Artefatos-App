@@ -246,3 +246,8 @@ end $$;
 
 revoke all on function public.ajustar_estoque(uuid, integer, text, text) from public, anon;
 grant execute on function public.ajustar_estoque(uuid, integer, text, text) to authenticated;
+
+-- ---------- Editar e estornar venda ----------
+-- Aplicado no projeto pela migração "editar_e_estornar_venda" (colunas estornada, estornada_em,
+-- estornada_por, motivo_estorno, editada_em em vendas; funções estornar_venda e editar_venda;
+-- gatilho mov_vendas registrando "Editou venda" e "Estornou venda" em movimentacoes).

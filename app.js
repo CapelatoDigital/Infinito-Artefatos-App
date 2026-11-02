@@ -1,6 +1,6 @@
 'use strict';
 /* App Infinito Artefatos — estoque e vendas (Supabase) */
-const VERSAO = '2026-11-02.5'; // mudar junto com version.json a cada publicação
+const VERSAO = '2026-11-02.6'; // mudar junto com version.json a cada publicação
 
 const CATS = ['Pulseiras', 'Colares', 'Incensos', 'Chaveiros', 'Pedras', 'Outros'];
 const PAGS = ['Pix', 'Dinheiro', 'Cartão de débito', 'Cartão de crédito'];
@@ -109,20 +109,22 @@ function vEstoque() {
 
 function vVendas() {
   if (!S.vendas.length) return `<div class="head"><h1>Vendas</h1></div><section class="panel"><div class="empty"><b>Nenhuma venda registrada</b>As vendas que você registrar na aba Vender aparecem aqui.</div></section>`;
-  const adm = ehAdmin(); let html = '', last = '';
+  let html = '', last = '';
   for (const v of S.vendas) {
     const d = diaDe(v.data);
     if (d !== last) { last = d; const [y, m, dd] = d.split('-'); html += `<div class="day">${d === hoje() ? 'Hoje · ' : ''}${dd}/${m}/${y}</div>`; }
-    const conf = S.confirm === v.id; const hr = new Date(v.data);
-    html += `<div class="item"><div class="main"><div class="nm">${(v.itens || []).map(i => `${i.qtd}× ${esc(i.nome)}`).join(', ')}</div><div class="sub">${pad(hr.getHours())}:${pad(hr.getMinutes())} · ${esc(v.pagamento)} · ${esc(v.canal)}${v.cliente ? ' · ' + esc(v.cliente) : ''}${+v.desconto ? ` · desc. ${brl(v.desconto)}` : ''}${v.vendedor_nome ? ' · por ' + esc(v.vendedor_nome) : ''}</div></div><span class="price">${brl(v.total)}</span>${adm ? `<div class="acts"><button class="btn sm danger" data-act="cancelar" data-id="${v.id}">${conf ? 'Confirmar cancelamento' : 'Cancelar'}</button></div>` : ''}</div>`;
+    const hr = new Date(v.data);
+    const info = `${pad(hr.getHours())}:${pad(hr.getMinutes())} · ${esc(v.pagamento)} · ${esc(v.canal)}${v.cliente ? ' · ' + esc(v.cliente) : ''}${+v.desconto ? ` · desc. ${brl(v.desconto)}` : ''}${v.vendedor_nome ? ' · por ' + esc(v.vendedor_nome) : ''}`;
+    const est = v.estornada ? (() => { const e = new Date(v.estornada_em); return `<div class="sub estorno-info">Estornada em ${pad(e.getDate())}/${pad(e.getMonth() + 1)} às ${pad(e.getHours())}:${pad(e.getMinutes())}${v.estornada_por ? ' por ' + esc(v.estornada_por) : ''}${v.motivo_estorno ? ' · ' + esc(v.motivo_estorno) : ''}</div>`; })() : '';
+    html += `<div class="item venda${v.estornada ? ' estornada' : ''}"><div class="main"><div class="riscavel"><div class="nm">${(v.itens || []).map(i => `${i.qtd}× ${esc(i.nome)}`).join(', ')}</div><div class="sub">${info}</div></div>${est}</div>${v.estornada ? '<span class="tag-estorno">ESTORNO</span>' : ''}<span class="price riscavel">${brl(v.total)}</span><div class="acts"><button class="btn sm" data-act="editarVenda" data-id="${v.id}">${v.estornada ? 'Ver' : 'Editar'}</button></div></div>`;
   }
-  return `<div class="head"><h1>Vendas</h1>${adm ? '<div class="sub" style="color:var(--muted)">Cancelar uma venda devolve os itens ao estoque.</div>' : ''}</div><section class="panel"><div class="list">${html}</div></section>`;
+  return `<div class="head"><h1>Vendas</h1><div class="sub" style="color:var(--muted)">Toque em Editar para corrigir pagamento, canal ou cliente, ou para estornar a venda.</div></div><section class="panel"><div class="list">${html}</div></section>`;
 }
 
 function vResumo() {
   const t = new Date(), h = hoje(); const d7 = new Date(t); d7.setDate(t.getDate() - 6); const ini7 = dia(d7); const mes = h.slice(0, 7);
   const f = { hoje: v => diaDe(v.data) === h, '7d': v => diaDe(v.data) >= ini7, mes: v => diaDe(v.data).startsWith(mes), tudo: () => true }[S.periodo];
-  const vs = S.vendas.filter(f); const fat = vs.reduce((s, v) => s + (+v.total || 0), 0);
+  const vs = S.vendas.filter(f).filter(v => !v.estornada); const fat = vs.reduce((s, v) => s + (+v.total || 0), 0);
   const lucro = vs.reduce((s, v) => s + (v.itens || []).reduce((a, i) => a + i.qtd * ((+i.preco || 0) - (+i.custo || 0)), 0) - (+v.desconto || 0), 0);
   const soma = (fn) => { const o = {}; vs.forEach(v => fn(v, o)); return Object.entries(o).sort((a, b) => b[1] - a[1]); };
   const canais = soma((v, o) => o[v.canal || 'Outro'] = (o[v.canal || 'Outro'] || 0) + (+v.total || 0));
@@ -352,6 +354,40 @@ function irParaCarrinho() {
   el.classList.add('destaque'); setTimeout(() => el.classList.remove('destaque'), 1600);
   setTimeout(() => $('#pag')?.focus({ preventScroll: true }), 400);
 }
+function abrirVenda(v) {
+  const m = $('#modal'); const adm = ehAdmin(); const hr = new Date(v.data);
+  const itens = (v.itens || []).map(i => `<div class="item"><div class="main"><div class="nm">${esc(i.nome)}</div><div class="sub">${i.qtd} × ${brl(i.preco)}</div></div><span class="price">${brl(i.qtd * i.preco)}</span></div>`).join('');
+  const cab = `<h1 style="font-size:26px">Venda de ${pad(hr.getDate())}/${pad(hr.getMonth() + 1)} às ${pad(hr.getHours())}:${pad(hr.getMinutes())}</h1><div class="sub" style="color:var(--muted)">${v.vendedor_nome ? 'Registrada por ' + esc(v.vendedor_nome) : ''}</div>`;
+  const tot = `<div class="total" style="margin-top:0"><span>${+v.desconto ? `Subtotal ${brl(v.subtotal)} · desconto ${brl(v.desconto)}` : 'Total'}</span><strong>${brl(v.total)}</strong></div>`;
+  if (v.estornada) {
+    m.innerHTML = `<div class="box">${cab}<div class="banner banner-estorno">Venda estornada. Os produtos voltaram ao estoque.${v.motivo_estorno ? ' Motivo: ' + esc(v.motivo_estorno) : ''}</div><div class="list estornada">${itens}</div>${tot}<button class="btn" data-act="fechar">Fechar</button></div>`;
+    m.hidden = false; return;
+  }
+  m.innerHTML = `<form class="box" id="fvenda">${cab}<div class="list">${itens}</div>${tot}
+    <div class="row"><div class="field"><label for="v_pag">Pagamento</label><select id="v_pag">${opts([...new Set([...PAGS, v.pagamento])].filter(Boolean), v.pagamento)}</select></div>
+    <div class="field"><label for="v_canal">Canal</label><select id="v_canal">${opts([...new Set([...CANAIS, v.canal])].filter(Boolean), v.canal)}</select></div></div>
+    <div class="field"><label for="v_cli">Cliente</label><input id="v_cli" value="${esc(v.cliente)}" placeholder="Nome ou @"></div>
+    <div class="row"><button type="button" class="btn" data-act="fechar">Fechar</button><button class="btn pri" id="v_salvar">Salvar alterações</button></div>
+    ${adm ? `<div class="zona-estorno"><div><b>Estornar venda</b><div class="sub" style="color:var(--muted)">Devolve os produtos ao estoque e marca a venda como estornada. Não pode ser desfeito.</div></div>
+      <div class="field"><label for="v_mot">Motivo do estorno (opcional)</label><input id="v_mot" placeholder="Ex.: cliente desistiu, troca, erro de lançamento"></div>
+      <button type="button" class="btn danger-solid" id="v_estornar">Estornar venda</button></div>` : '<div class="sub" style="color:var(--muted)">Estorno: peça ao administrador.</div>'}
+  </form>`;
+  m.hidden = false;
+  $('#fvenda').onsubmit = async ev => {
+    ev.preventDefault(); $('#v_salvar').disabled = true;
+    const { error } = await sb.rpc('editar_venda', { p_id: v.id, p_pagamento: $('#v_pag').value, p_canal: $('#v_canal').value, p_cliente: $('#v_cli').value });
+    if (error) { toast(msgErro(error)); $('#v_salvar').disabled = false; return; }
+    toast('Venda atualizada'); fechar(); recarregar(['vendas']);
+  };
+  const be = $('#v_estornar');
+  if (be) be.onclick = async () => {
+    if (be.dataset.conf !== '1') { be.dataset.conf = '1'; be.textContent = `Confirmar estorno de ${brl(v.total)}`; return; }
+    be.disabled = true; be.textContent = 'Estornando…';
+    const { error } = await sb.rpc('estornar_venda', { p_id: v.id, p_motivo: $('#v_mot').value });
+    if (error) { toast(msgErro(error)); be.disabled = false; be.dataset.conf = ''; be.textContent = 'Estornar venda'; return; }
+    toast('Venda estornada e produtos devolvidos ao estoque'); fechar(); recarregar(['produtos', 'vendas']);
+  };
+}
 function abrirInstalar() {
   const m = $('#modal');
   m.innerHTML = `<div class="box"><h1 style="font-size:26px">Instalar no iPhone</h1><p>No Safari, toque no botão <b>Compartilhar</b> (o quadrado com a seta para cima) e escolha <b>Adicionar à Tela de Início</b>.</p><button class="btn pri" data-act="fechar">Entendi</button></div>`;
@@ -410,6 +446,7 @@ document.addEventListener('click', async ev => {
       const { error } = await sb.from('produtos').delete().eq('id', id); if (error) throw error;
       toast('Produto excluído'); recarregar(['produtos']);
     }
+    else if (a === 'editarVenda') { const v = S.vendas.find(x => x.id === id); if (v) abrirVenda(v); }
     else if (a === 'cancelar') {
       if (S.confirm !== id) { S.confirm = id; render(); return; }
       S.confirm = null; const { error } = await sb.rpc('cancelar_venda', { p_id: id }); if (error) throw error;

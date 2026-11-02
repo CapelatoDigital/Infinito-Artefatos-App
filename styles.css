@@ -177,3 +177,13 @@ body.mini #side a{justify-content:center;padding:11px 0}
 #carrinho.destaque{outline:3px solid var(--accent);outline-offset:3px}
 @media (prefers-reduced-motion:no-preference){#carrinho{transition:outline-color .3s}}
 body:has(#modal:not([hidden])) #toast{top:calc(env(safe-area-inset-top,0px) + 16px);bottom:auto}
+/* ---- Vendas: estorno ---- */
+.venda.estornada .riscavel{text-decoration:line-through;text-decoration-color:var(--bad);text-decoration-thickness:2px;color:var(--muted)}
+.venda.estornada .riscavel .nm{color:var(--muted)}
+.list.estornada .nm,.list.estornada .sub,.list.estornada .price{text-decoration:line-through;text-decoration-color:var(--bad);text-decoration-thickness:2px}
+.tag-estorno{font-size:11px;font-weight:800;letter-spacing:.08em;color:#fff;background:var(--bad);padding:3px 8px;border-radius:6px;white-space:nowrap}
+.estorno-info{color:var(--bad)!important;font-weight:600;margin-top:2px}
+.banner-estorno{background:var(--bad-soft);color:var(--bad)}
+.zona-estorno{border:1px solid var(--bad-soft);background:color-mix(in srgb,var(--bad-soft) 55%,transparent);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.btn.danger-solid{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.danger-solid:hover{filter:brightness(1.05)}
