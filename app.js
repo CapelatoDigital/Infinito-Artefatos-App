@@ -1,6 +1,6 @@
 'use strict';
 /* App Infinito Artefatos — estoque e vendas (Supabase) */
-const VERSAO = '2026-11-02.4'; // mudar junto com version.json a cada publicação
+const VERSAO = '2026-11-02.5'; // mudar junto com version.json a cada publicação
 
 const CATS = ['Pulseiras', 'Colares', 'Incensos', 'Chaveiros', 'Pedras', 'Outros'];
 const PAGS = ['Pix', 'Dinheiro', 'Cartão de débito', 'Cartão de crédito'];
@@ -67,7 +67,7 @@ function vVender() {
   const c = cartTotals();
   const lista = S.produtos.length ? ps.map(p => {
     const [k, l] = nivel(p); const noCart = S.carrinho[p.id] || 0; const sem = (+p.estoque || 0) - noCart <= 0;
-    return `<button class="item" data-act="add" data-id="${p.id}" ${sem ? 'disabled' : ''}>${thumb(p)}<div class="main"><div class="nm">${esc(p.nome)}${p.variacao ? ' · ' + esc(p.variacao) : ''}</div><div class="sub">${esc(p.categoria)}${noCart ? ` · ${noCart} no carrinho` : ''}</div></div><span class="pill ${k}">${l}</span><span class="price">${brl(p.preco)}</span></button>`;
+    return `<button class="item" data-act="escolher" data-id="${p.id}" ${sem ? 'disabled' : ''}>${thumb(p)}<div class="main"><div class="nm">${esc(p.nome)}${p.variacao ? ' · ' + esc(p.variacao) : ''}</div><div class="sub">${esc(p.categoria)}${noCart ? ` · ${noCart} no carrinho` : ''}</div></div><span class="pill ${k}">${l}</span><span class="price">${brl(p.preco)}</span></button>`;
   }).join('') || '<div class="empty">Nenhum produto encontrado.</div>'
     : '<div class="empty"><b>Nenhum produto ainda</b>Cadastre seus produtos na aba Estoque para começar a vender.</div>';
   const cart = c.it.length ? c.it.map(x => `<div class="item">${thumb(x.p)}<div class="main"><div class="nm">${esc(x.p.nome)}${x.p.variacao ? ' · ' + esc(x.p.variacao) : ''}</div><div class="sub">${brl(x.p.preco)} cada</div></div><div class="qty"><button data-act="dec" data-id="${x.p.id}" aria-label="Diminuir">−</button><span>${x.q}</span><button data-act="add" data-id="${x.p.id}" aria-label="Aumentar">+</button></div><span class="price">${brl(x.q * x.p.preco)}</span></div>`).join('')
@@ -314,6 +314,44 @@ function abrirEntrada(p) {
     toast(`${delta > 0 ? '+' : '−'}${q} un em ${p.nome}`); fechar(); recarregar(['produtos']);
   };
 }
+function abrirEscolha(p) {
+  const m = $('#modal'); const noCart = S.carrinho[p.id] || 0; const disp = Math.max(0, (+p.estoque || 0) - noCart);
+  if (!disp) { toast('Sem estoque disponível'); return; }
+  m.innerHTML = `<form class="box" id="fesc">
+    <div class="esc-top">${thumb(p, 'lg')}<div class="esc-info"><h1 style="font-size:24px">${esc(p.nome)}</h1>${p.variacao ? `<div class="sub" style="color:var(--muted)">${esc(p.variacao)}</div>` : ''}<div class="esc-preco">${brl(p.preco)}</div><div class="sub" style="color:var(--muted)">${disp} un disponíveis${noCart ? ` · ${noCart} já no carrinho` : ''}</div></div></div>
+    ${p.descricao ? `<div class="sub desc" style="color:var(--muted)">${esc(p.descricao)}</div>` : ''}
+    <div class="field"><label for="c_q">Quantidade</label>
+      <div class="qty-big"><button type="button" id="c_dec" aria-label="Diminuir">−</button><input id="c_q" inputmode="numeric" value="1"><button type="button" id="c_inc" aria-label="Aumentar">+</button></div></div>
+    <div class="total" style="margin-top:0"><span>Subtotal</span><strong id="c_sub">${brl(p.preco)}</strong></div>
+    <div class="row"><button type="button" class="btn" data-act="fechar">Voltar</button><button class="btn pri" id="c_ok">Colocar no carrinho</button></div></form>`;
+  m.hidden = false;
+  const qtd = () => Math.min(disp, Math.max(1, Math.round(num($('#c_q').value)) || 1));
+  const atualiza = () => { $('#c_sub').textContent = brl(qtd() * (+p.preco || 0)); };
+  $('#c_q').oninput = atualiza;
+  $('#c_q').onblur = () => { $('#c_q').value = qtd(); atualiza(); };
+  $('#c_inc').onclick = () => { $('#c_q').value = Math.min(disp, qtd() + 1); atualiza(); if (qtd() >= disp) toast(`Só há ${disp} un disponíveis`); };
+  $('#c_dec').onclick = () => { $('#c_q').value = Math.max(1, qtd() - 1); atualiza(); };
+  $('#fesc').onsubmit = ev => {
+    ev.preventDefault(); const q = qtd();
+    S.carrinho[p.id] = noCart + q; fechar(); render();
+    const c = cartTotals();
+    if (c.n >= 2) abrirContinuar(); else toast(`${q}× ${p.nome} no carrinho`);
+  };
+}
+function abrirContinuar() {
+  const c = cartTotals(); const m = $('#modal');
+  m.innerHTML = `<div class="box"><h1 style="font-size:26px">Item adicionado</h1>
+    <div class="list">${c.it.map(x => `<div class="item">${thumb(x.p)}<div class="main"><div class="nm">${esc(x.p.nome)}${x.p.variacao ? ' · ' + esc(x.p.variacao) : ''}</div><div class="sub">${x.q} × ${brl(x.p.preco)}</div></div><span class="price">${brl(x.q * x.p.preco)}</span></div>`).join('')}</div>
+    <div class="total" style="margin-top:0"><span>${c.n} itens no carrinho</span><strong>${brl(c.sub)}</strong></div>
+    <div class="row"><button class="btn" data-act="fechar">Continuar adicionando</button><button class="btn pri" data-act="finalizar">Finalizar venda</button></div></div>`;
+  m.hidden = false;
+}
+function irParaCarrinho() {
+  const el = $('#carrinho'); if (!el) return;
+  el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  el.classList.add('destaque'); setTimeout(() => el.classList.remove('destaque'), 1600);
+  setTimeout(() => $('#pag')?.focus({ preventScroll: true }), 400);
+}
 function abrirInstalar() {
   const m = $('#modal');
   m.innerHTML = `<div class="box"><h1 style="font-size:26px">Instalar no iPhone</h1><p>No Safari, toque no botão <b>Compartilhar</b> (o quadrado com a seta para cima) e escolha <b>Adicionar à Tela de Início</b>.</p><button class="btn pri" data-act="fechar">Entendi</button></div>`;
@@ -341,7 +379,7 @@ async function registrarVenda() {
 document.addEventListener('click', async ev => {
   if (ev.target.id === 'modal') { fechar(); return; }
   if (ev.target.id === 'scrim') { fecharMenu(); return; }
-  if (ev.target.closest('#mbar')) { $('#carrinho')?.scrollIntoView({ behavior: 'smooth' }); return; }
+  if (ev.target.closest('#mbar')) { irParaCarrinho(); return; }
   const b = ev.target.closest('[data-act]'); if (!b) return;
   const a = b.dataset.act, id = b.dataset.id, em = b.dataset.e;
   if (!['excluir', 'cancelar', 'remover'].includes(a)) S.confirm = null;
@@ -355,6 +393,8 @@ document.addEventListener('click', async ev => {
     else if (a === 'atualizar') aplicarAtualizacao();
     else if (a === 'recarregar') { iniciarSessao(S.user); }
     else if (a === 'instalar') { if (installEvt) { installEvt.prompt(); await installEvt.userChoice; installEvt = null; render(); } else abrirInstalar(); }
+    else if (a === 'escolher') abrirEscolha(prod(id));
+    else if (a === 'finalizar') { fechar(); irParaCarrinho(); }
     else if (a === 'add') { const p = prod(id); const q = (S.carrinho[id] || 0) + 1; if (q > (+p.estoque || 0)) { toast('Estoque insuficiente'); return; } S.carrinho[id] = q; render(); }
     else if (a === 'dec') { S.carrinho[id] = (S.carrinho[id] || 0) - 1; if (S.carrinho[id] <= 0) delete S.carrinho[id]; render(); }
     else if (a === 'vender') registrarVenda();
