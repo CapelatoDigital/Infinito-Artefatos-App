@@ -183,7 +183,8 @@ function vHeader() {
 function render() {
   $('#hright').innerHTML = vHeader();
   const pronto = S.fase === 'pronto';
-  $('#nav').hidden = !pronto; $('#navEquipe').hidden = !ehAdmin();
+  $('#side').hidden = !pronto; $('#menuBtn').hidden = !pronto; $('#navEquipe').hidden = !ehAdmin();
+  if (!pronto) fecharMenu();
   const v = view();
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.v === v));
   const fe = document.activeElement, fid = fe && fe.id, sel = fid && fe.selectionStart;
@@ -290,6 +291,12 @@ function abrirInstalar() {
   m.innerHTML = `<div class="box"><h1 style="font-size:26px">Instalar no iPhone</h1><p>No Safari, toque no botão <b>Compartilhar</b> (o quadrado com a seta para cima) e escolha <b>Adicionar à Tela de Início</b>.</p><button class="btn pri" data-act="fechar">Entendi</button></div>`;
   m.hidden = false;
 }
+const celular = () => matchMedia('(max-width: 820px)').matches;
+function fecharMenu() { document.body.classList.remove('open'); $('#scrim').hidden = true; $('#menuBtn')?.setAttribute('aria-expanded', 'false'); }
+function alternarMenu() {
+  if (celular()) { const abrir = !document.body.classList.contains('open'); document.body.classList.toggle('open', abrir); $('#scrim').hidden = !abrir; $('#menuBtn').setAttribute('aria-expanded', String(abrir)); }
+  else { const mini = document.body.classList.toggle('mini'); $('#menuBtn').setAttribute('aria-expanded', String(!mini)); try { localStorage.setItem('menuRecolhido', mini ? '1' : '0'); } catch (e) { } }
+}
 function fechar() { $('#modal').hidden = true; $('#modal').innerHTML = ''; }
 
 /* ---------- ações ---------- */
@@ -305,6 +312,7 @@ async function registrarVenda() {
 
 document.addEventListener('click', async ev => {
   if (ev.target.id === 'modal') { fechar(); return; }
+  if (ev.target.id === 'scrim') { fecharMenu(); return; }
   if (ev.target.closest('#mbar')) { $('#carrinho')?.scrollIntoView({ behavior: 'smooth' }); return; }
   const b = ev.target.closest('[data-act]'); if (!b) return;
   const a = b.dataset.act, id = b.dataset.id, em = b.dataset.e;
@@ -315,6 +323,7 @@ document.addEventListener('click', async ev => {
       if (error) toast(msgErro(error));
     }
     else if (a === 'logout') { await sb.auth.signOut(); S.user = null; S.membro = null; S.fase = 'login'; render(); }
+    else if (a === 'menu') alternarMenu();
     else if (a === 'recarregar') { iniciarSessao(S.user); }
     else if (a === 'instalar') { if (installEvt) { installEvt.prompt(); await installEvt.userChoice; installEvt = null; render(); } else abrirInstalar(); }
     else if (a === 'add') { const p = prod(id); const q = (S.carrinho[id] || 0) + 1; if (q > (+p.estoque || 0)) { toast('Estoque insuficiente'); return; } S.carrinho[id] = q; render(); }
@@ -370,8 +379,9 @@ document.addEventListener('change', ev => {
   const t = ev.target;
   if (t.id === 'pag') S.form.pag = t.value; else if (t.id === 'canal') S.form.canal = t.value; else if (t.id === 'desc') render();
 });
-document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !$('#modal').hidden) fechar(); });
-addEventListener('hashchange', () => { S.confirm = null; render(); scrollTo(0, 0); });
+document.addEventListener('keydown', ev => { if (ev.key !== 'Escape') return; if (!$('#modal').hidden) fechar(); else fecharMenu(); });
+addEventListener('hashchange', () => { S.confirm = null; fecharMenu(); render(); scrollTo(0, 0); });
+addEventListener('resize', () => { if (!celular()) fecharMenu(); });
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; render(); });
 addEventListener('appinstalled', () => { installEvt = null; render(); toast('App instalado'); });
 
@@ -423,6 +433,7 @@ async function iniciarSessao(user) {
 }
 
 (function init() {
+  try { if (localStorage.getItem('menuRecolhido') === '1') document.body.classList.add('mini'); } catch (e) { }
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });
   const cfg = window.CONFIG || {};
   if (!window.supabase || !cfg.SUPABASE_URL || cfg.SUPABASE_URL.startsWith('COLE_AQUI')) { S.fase = 'config'; render(); return; }

@@ -20,17 +20,24 @@
 </head>
 <body>
 <header><div class="wrap">
-  <div class="brand"><b>∞</b> Infinito Artefatos <small>Estoque &amp; Vendas</small></div>
-  <nav id="nav" hidden>
-    <a href="#vender" data-v="vender">Vender</a>
-    <a href="#estoque" data-v="estoque">Estoque</a>
-    <a href="#vendas" data-v="vendas">Vendas</a>
-    <a href="#resumo" data-v="resumo">Resumo</a>
-    <a href="#equipe" data-v="equipe" id="navEquipe" hidden>Equipe</a>
-  </nav>
+  <div class="hleft"><button class="menu-btn" id="menuBtn" data-act="menu" aria-label="Abrir ou recolher o menu" aria-expanded="false" aria-controls="side" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <div class="brand"><b>∞</b> Infinito Artefatos <small>Estoque &amp; Vendas</small></div></div>
   <div class="hright" id="hright"></div>
 </div></header>
-<main class="wrap" id="app"><div class="empty"><b>Carregando…</b></div></main>
+<div class="shell">
+  <aside id="side" hidden aria-label="Menu">
+    <div class="side-title">Menu</div>
+    <nav id="nav">
+    <a href="#vender" data-v="vender" title="Vender"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L22 7H6"/></svg><span class="lbl">Vender</span></a>
+    <a href="#estoque" data-v="estoque" title="Estoque"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/></svg><span class="lbl">Estoque</span></a>
+    <a href="#vendas" data-v="vendas" title="Vendas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg><span class="lbl">Vendas</span></a>
+    <a href="#resumo" data-v="resumo" title="Resumo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span class="lbl">Resumo</span></a>
+    <a href="#equipe" data-v="equipe" title="Equipe" id="navEquipe" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2 21c0-3.9 3.1-7 7-7s7 3.1 7 7"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M22 21c0-3-1.8-5.5-4.5-6.5"/></svg><span class="lbl">Equipe</span></a>
+    </nav>
+  </aside>
+  <main class="wrap" id="app"><div class="empty"><b>Carregando…</b></div></main>
+</div>
+<div id="scrim" hidden></div>
 <button class="mbar" id="mbar" hidden></button>
 <div id="modal" hidden></div>
 <div id="toast" hidden role="status" aria-live="polite"></div>
