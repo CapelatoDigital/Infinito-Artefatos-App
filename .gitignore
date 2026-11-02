@@ -1,0 +1,5 @@
+.DS_Store
+node_modules
+.vercel
+# Dados de produtos (custos) ficam fora do repositório público
+supabase/seed-*.sql

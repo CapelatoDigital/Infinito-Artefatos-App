@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>App Infinito Artefatos</title>
+<meta name="description" content="Controle de estoque e vendas da Infinito Artefatos.">
+<meta name="theme-color" content="#151418">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Infinito">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header><div class="wrap">
+  <div class="brand"><b>∞</b> Infinito Artefatos <small>Estoque &amp; Vendas</small></div>
+  <nav id="nav" hidden>
+    <a href="#vender" data-v="vender">Vender</a>
+    <a href="#estoque" data-v="estoque">Estoque</a>
+    <a href="#vendas" data-v="vendas">Vendas</a>
+    <a href="#resumo" data-v="resumo">Resumo</a>
+    <a href="#equipe" data-v="equipe" id="navEquipe" hidden>Equipe</a>
+  </nav>
+  <div class="hright" id="hright"></div>
+</div></header>
+<main class="wrap" id="app"><div class="empty"><b>Carregando…</b></div></main>
+<button class="mbar" id="mbar" hidden></button>
+<div id="modal" hidden></div>
+<div id="toast" hidden role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="/config.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
