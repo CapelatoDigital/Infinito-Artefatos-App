@@ -1,6 +1,6 @@
 'use strict';
 /* App Infinito Artefatos — estoque e vendas (Supabase) */
-const VERSAO = '2026-11-02.1'; // mudar junto com version.json a cada publicação
+const VERSAO = '2026-11-02.2'; // mudar junto com version.json a cada publicação
 
 const CATS = ['Pulseiras', 'Colares', 'Incensos', 'Chaveiros', 'Pedras', 'Outros'];
 const PAGS = ['Pix', 'Dinheiro', 'Cartão de débito', 'Cartão de crédito'];
@@ -99,7 +99,7 @@ function vEstoque() {
   const rows = ps.map(p => {
     const [k, l] = nivel(p); const conf = S.confirm === p.id;
     return `<div class="item">${thumb(p)}<div class="main"><div class="nm">${esc(p.nome)}${p.variacao ? ' · ' + esc(p.variacao) : ''}</div><div class="sub">${esc(p.categoria)}${p.fornecedor ? ' · fornecedor ' + esc(p.fornecedor) : ''} · custo ${brl(p.custo)} · venda ${brl(p.preco)}</div>${p.descricao ? `<div class="sub desc">${esc(p.descricao)}</div>` : ''}</div><span class="pill ${k}">${l}</span>
-    <div class="acts"><button class="btn sm" data-act="entrada" data-id="${p.id}">+ Entrada</button><button class="btn sm" data-act="editar" data-id="${p.id}">Editar</button>${adm ? `<button class="btn sm danger" data-act="excluir" data-id="${p.id}">${conf ? 'Confirmar exclusão' : 'Excluir'}</button>` : ''}</div></div>`;
+    <div class="acts"><button class="btn sm" data-act="entrada" data-id="${p.id}">Quantidade</button><button class="btn sm" data-act="editar" data-id="${p.id}">Editar</button>${adm ? `<button class="btn sm danger" data-act="excluir" data-id="${p.id}">${conf ? 'Confirmar exclusão' : 'Excluir'}</button>` : ''}</div></div>`;
   }).join('');
   return `<div class="head"><div><h1>Estoque</h1><div class="sub" style="color:var(--muted)">${S.produtos.length} produtos · ${un} unidades · ${brl(val)} em custo</div></div><button class="btn pri" data-act="novo">Novo produto</button></div>
   <div class="chips">${cats.map(c => `<button class="chip${S.cat === c ? ' on' : ''}" data-act="cat" data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div>
@@ -275,7 +275,7 @@ function abrirProduto(p) {
 }
 function abrirEntrada(p) {
   const m = $('#modal');
-  m.innerHTML = `<form class="box" id="fent"><h1 style="font-size:26px">Entrada de estoque</h1><div style="color:var(--muted)">${esc(p.nome)}${p.variacao ? ' · ' + esc(p.variacao) : ''} · hoje ${+p.estoque || 0} un</div>
+  m.innerHTML = `<form class="box" id="fent"><h1 style="font-size:26px">Adicionar quantidade</h1><div style="color:var(--muted)">${esc(p.nome)}${p.variacao ? ' · ' + esc(p.variacao) : ''} · hoje ${+p.estoque || 0} un</div>
   <div class="field"><label for="e_q">Quantidade que chegou</label><input id="e_q" inputmode="numeric" required placeholder="Ex.: 10"></div>
   <div class="field"><label for="e_obs">Observação (opcional)</label><input id="e_obs" placeholder="Fornecedor, lote…"></div>
   <div class="row" style="margin-top:6px"><button type="button" class="btn" data-act="fechar">Cancelar</button><button class="btn pri">Adicionar ao estoque</button></div></form>`;
