@@ -5,13 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>App Infinito Artefatos</title>
 <meta name="description" content="Controle de estoque e vendas da Infinito Artefatos.">
-<meta name="theme-color" content="#151418">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1a20" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Infinito">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/icons/favicon-48.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +23,7 @@
 <body>
 <header><div class="wrap">
   <div class="hleft"><button class="menu-btn" id="menuBtn" data-act="menu" aria-label="Abrir ou recolher o menu" aria-expanded="false" aria-controls="side" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-  <div class="brand"><b>∞</b> Infinito Artefatos <small>Estoque &amp; Vendas</small></div></div>
+  <a class="brand" href="#vender" aria-label="Infinito Artefatos — início"><img class="logo-claro" src="/icons/logo.png" alt="Infinito Artefatos" width="80" height="44"><img class="logo-escuro" src="/icons/logo-branco.png" alt="" width="80" height="44"><small>Estoque &amp; Vendas</small></a></div>
   <div class="hright" id="hright"></div>
 </div></header>
 <div class="shell">

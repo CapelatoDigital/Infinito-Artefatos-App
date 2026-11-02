@@ -1,9 +1,9 @@
 // Service worker: deixa o app instalável e abre rápido.
 // Os dados (Supabase) sempre vêm da internet; só os arquivos do app ficam guardados.
-const CACHE = 'infinito-v2';
+const CACHE = 'infinito-v3';
 const SHELL = [
   '/', '/index.html', '/styles.css', '/app.js', '/config.js', '/manifest.webmanifest',
-  '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png',
+  '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png', '/icons/logo.png', '/icons/logo-branco.png',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'
 ];
 

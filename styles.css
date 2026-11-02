@@ -110,7 +110,7 @@ body{-webkit-tap-highlight-color:transparent}
 .me{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:600}
 .me img,.me .ini{width:30px;height:30px;border-radius:50%;object-fit:cover;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700}
 .gate{max-width:420px;margin:8vh auto 0;text-align:center;display:flex;flex-direction:column;gap:16px;align-items:center}
-.gate .logo{font-family:var(--display);font-size:84px;line-height:1;font-weight:500}
+.gate .logo img{width:min(300px,78vw);height:auto;display:block}
 .gate h1{font-size:36px}
 .gate p{color:var(--muted);margin:0}
 .gbtn{display:inline-flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:12px 22px;font-weight:700;font-size:16px;cursor:pointer;min-height:48px}
@@ -146,3 +146,8 @@ body.mini #side a{justify-content:center;padding:11px 0}
   body.open #side{transform:none}
   .side-title{display:block}
 }
+/* ---- Logo da marca (original do Canva) ---- */
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}
+.brand img{height:50px;width:auto;display:block}
+.logo-escuro{display:none!important}
+@media (prefers-color-scheme:dark){.logo-claro{display:none!important}.logo-escuro{display:block!important}}
