@@ -1,6 +1,6 @@
 'use strict';
 /* App Infinito Artefatos — estoque e vendas (Supabase) */
-const VERSAO = '2026-11-02.3'; // mudar junto com version.json a cada publicação
+const VERSAO = '2026-11-02.4'; // mudar junto com version.json a cada publicação
 
 const CATS = ['Pulseiras', 'Colares', 'Incensos', 'Chaveiros', 'Pedras', 'Outros'];
 const PAGS = ['Pix', 'Dinheiro', 'Cartão de débito', 'Cartão de crédito'];
@@ -491,6 +491,7 @@ async function iniciarSessao(user) {
     S.membro = me;
     if (!me.nome && user.user_metadata?.full_name) { await sb.rpc('atualizar_meu_nome', { p_nome: user.user_metadata.full_name }); S.membro.nome = user.user_metadata.full_name; }
     await buscar();
+    sb.rpc('registrar_acesso').then(() => { }, () => { });
     S.fase = 'pronto'; render();
     assinar(); migrarFotos();
   } catch (err) { S.erro = msgErro(err); S.fase = 'erro'; render(); }
