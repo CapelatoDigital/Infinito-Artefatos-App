@@ -222,3 +222,27 @@ insert into public.membros (email, nome, papel) values
   ('capelatodigital@gmail.com',         'Felipe Capelato', 'admin'),
   ('sacerdotefelipecapelato@gmail.com', 'Felipe Capelato', 'admin')
 on conflict (email) do nothing;
+
+-- ---------- Ajuste de estoque (acrescentar ou retirar, com motivo) ----------
+alter table public.entradas add column if not exists motivo text not null default 'Entrada de mercadoria';
+
+create or replace function public.ajustar_estoque(p_produto uuid, p_delta integer, p_motivo text, p_obs text)
+returns integer
+language plpgsql security definer set search_path = '' as $$
+declare p public.produtos%rowtype; novo integer;
+begin
+  if not public.eh_membro() then raise exception 'Acesso não autorizado'; end if;
+  if p_delta is null or p_delta = 0 then raise exception 'Informe uma quantidade diferente de zero'; end if;
+  select * into p from public.produtos where id = p_produto for update;
+  if not found then raise exception 'Produto não encontrado'; end if;
+  novo := p.estoque + p_delta;
+  if novo < 0 then raise exception 'Não dá para retirar % un de %: só há % em estoque', -p_delta, p.nome, p.estoque; end if;
+  update public.produtos set estoque = novo, atualizado_em = now() where id = p_produto;
+  insert into public.entradas (produto_id, nome, qtd, motivo, obs, usuario_email)
+  values (p_produto, p.nome, p_delta, coalesce(nullif(trim(p_motivo), ''), case when p_delta > 0 then 'Entrada de mercadoria' else 'Ajuste' end),
+          coalesce(trim(p_obs), ''), public.meu_email());
+  return novo;
+end $$;
+
+revoke all on function public.ajustar_estoque(uuid, integer, text, text) from public, anon;
+grant execute on function public.ajustar_estoque(uuid, integer, text, text) to authenticated;

@@ -1,6 +1,6 @@
 'use strict';
 /* App Infinito Artefatos — estoque e vendas (Supabase) */
-const VERSAO = '2026-11-02.2'; // mudar junto com version.json a cada publicação
+const VERSAO = '2026-11-02.3'; // mudar junto com version.json a cada publicação
 
 const CATS = ['Pulseiras', 'Colares', 'Incensos', 'Chaveiros', 'Pedras', 'Outros'];
 const PAGS = ['Pix', 'Dinheiro', 'Cartão de débito', 'Cartão de crédito'];
@@ -274,17 +274,44 @@ function abrirProduto(p) {
   };
 }
 function abrirEntrada(p) {
-  const m = $('#modal');
-  m.innerHTML = `<form class="box" id="fent"><h1 style="font-size:26px">Adicionar quantidade</h1><div style="color:var(--muted)">${esc(p.nome)}${p.variacao ? ' · ' + esc(p.variacao) : ''} · hoje ${+p.estoque || 0} un</div>
-  <div class="field"><label for="e_q">Quantidade que chegou</label><input id="e_q" inputmode="numeric" required placeholder="Ex.: 10"></div>
-  <div class="field"><label for="e_obs">Observação (opcional)</label><input id="e_obs" placeholder="Fornecedor, lote…"></div>
-  <div class="row" style="margin-top:6px"><button type="button" class="btn" data-act="fechar">Cancelar</button><button class="btn pri">Adicionar ao estoque</button></div></form>`;
-  m.hidden = false; $('#e_q').focus();
+  const m = $('#modal'); const atual = +p.estoque || 0;
+  const MOTIVOS = { mais: ['Entrada de mercadoria', 'Produção própria', 'Devolução de cliente', 'Ajuste de contagem', 'Outro'], menos: ['Ajuste de contagem', 'Perda ou quebra', 'Uso próprio ou brinde', 'Devolução ao fornecedor', 'Outro'] };
+  m.innerHTML = `<form class="box" id="fent"><h1 style="font-size:26px">Ajustar quantidade</h1><div style="color:var(--muted)">${esc(p.nome)}${p.variacao ? ' · ' + esc(p.variacao) : ''}</div>
+  <div class="ajuste-tipo" role="radiogroup" aria-label="Tipo de ajuste">
+    <label><input type="radio" name="e_tipo" id="e_mais" value="mais" checked><span>+ Acrescentar</span></label>
+    <label><input type="radio" name="e_tipo" id="e_menos" value="menos"><span>− Retirar</span></label>
+  </div>
+  <div class="field"><label for="e_q">Quantidade</label>
+    <div class="qty-big"><button type="button" id="e_dec" aria-label="Diminuir">−</button><input id="e_q" inputmode="numeric" required value="1"><button type="button" id="e_inc" aria-label="Aumentar">+</button></div></div>
+  <div class="field"><label for="e_mot">Motivo</label><select id="e_mot"></select></div>
+  <div class="field"><label for="e_obs">Observação (opcional)</label><input id="e_obs" placeholder="Fornecedor, lote, detalhe…"></div>
+  <div class="ajuste-prev" id="e_prev"></div>
+  <div class="row" style="margin-top:6px"><button type="button" class="btn" data-act="fechar">Cancelar</button><button class="btn pri" id="e_ok">Salvar ajuste</button></div></form>`;
+  m.hidden = false;
+  const tipo = () => $('#e_menos').checked ? 'menos' : 'mais';
+  const qtd = () => Math.max(0, Math.round(num($('#e_q').value)));
+  const motivos = () => { const t = tipo(), sel = $('#e_mot').value; $('#e_mot').innerHTML = opts(MOTIVOS[t], MOTIVOS[t].includes(sel) ? sel : MOTIVOS[t][0]); };
+  const prev = () => {
+    const q = qtd(), sinal = tipo() === 'mais' ? 1 : -1, novo = atual + sinal * q;
+    const erro = novo < 0;
+    $('#e_prev').className = 'ajuste-prev' + (erro ? ' erro' : '');
+    $('#e_prev').innerHTML = erro ? `Só há ${atual} un em estoque. Não dá para retirar ${q}.` : `Estoque: <b>${atual} un</b> → <b>${novo} un</b>`;
+    $('#e_ok').disabled = erro || !q;
+    $('#e_ok').textContent = tipo() === 'mais' ? `Acrescentar ${q || ''} un`.replace('  ', ' ') : `Retirar ${q || ''} un`.replace('  ', ' ');
+  };
+  motivos(); prev();
+  $('#e_mais').onchange = $('#e_menos').onchange = () => { motivos(); prev(); };
+  $('#e_q').oninput = prev;
+  $('#e_inc').onclick = () => { $('#e_q').value = qtd() + 1; prev(); };
+  $('#e_dec').onclick = () => { $('#e_q').value = Math.max(1, qtd() - 1); prev(); };
+  $('#e_q').focus(); $('#e_q').select();
   $('#fent').onsubmit = async ev => {
-    ev.preventDefault(); const q = Math.round(num($('#e_q').value)); if (q <= 0) { toast('Informe uma quantidade maior que zero'); return; }
-    const { error } = await sb.rpc('registrar_entrada', { p_produto: p.id, p_qtd: q, p_obs: $('#e_obs').value.trim() });
-    if (error) { toast(msgErro(error)); return; }
-    toast(`+${q} un em ${p.nome}`); fechar(); recarregar(['produtos']);
+    ev.preventDefault(); const q = qtd(); if (!q) { toast('Informe uma quantidade maior que zero'); return; }
+    const delta = tipo() === 'mais' ? q : -q;
+    $('#e_ok').disabled = true;
+    const { error } = await sb.rpc('ajustar_estoque', { p_produto: p.id, p_delta: delta, p_motivo: $('#e_mot').value, p_obs: $('#e_obs').value.trim() });
+    if (error) { toast(msgErro(error)); $('#e_ok').disabled = false; return; }
+    toast(`${delta > 0 ? '+' : '−'}${q} un em ${p.nome}`); fechar(); recarregar(['produtos']);
   };
 }
 function abrirInstalar() {
