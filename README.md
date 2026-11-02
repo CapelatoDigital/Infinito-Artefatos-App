@@ -76,7 +76,8 @@ Em **Authentication → URL Configuration**:
 | Registrar vendas | ✓ | ✓ |
 | Cadastrar produto e lançar entrada | ✓ | ✓ |
 | Editar preço, foto e dados do produto | ✓ | ✓ |
-| Excluir produto e cancelar venda | | ✓ |
+| Estornar venda (devolve ao estoque) | ✓ | ✓ |
+| Excluir produto | | ✓ |
 | Gerenciar a equipe | | ✓ |
 
 As regras ficam no banco de dados (`schema.sql`), não só na tela. Mesmo que alguém mexa no código do navegador, o Supabase recusa o que a pessoa não tem permissão para fazer. Toda venda dá baixa no estoque numa única operação, e o banco não deixa vender mais do que existe.

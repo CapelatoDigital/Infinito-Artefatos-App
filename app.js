@@ -1,6 +1,6 @@
 'use strict';
 /* App Infinito Artefatos — estoque e vendas (Supabase) */
-const VERSAO = '2026-11-02.7'; // mudar junto com version.json a cada publicação
+const VERSAO = '2026-11-02.8'; // mudar junto com version.json a cada publicação
 
 const CATS = ['Pulseiras', 'Colares', 'Incensos', 'Chaveiros', 'Pedras', 'Outros'];
 const PAGS = ['Pix', 'Dinheiro', 'Cartão de débito', 'Cartão de crédito'];
@@ -369,9 +369,9 @@ function abrirVenda(v) {
     <div class="field"><label for="v_canal">Canal</label><select id="v_canal">${opts([...new Set([...CANAIS, v.canal])].filter(Boolean), v.canal)}</select></div></div>
     <div class="field"><label for="v_cli">Cliente</label><input id="v_cli" value="${esc(v.cliente)}" placeholder="Nome ou @"></div>
     <div class="row"><button type="button" class="btn" data-act="fechar">Fechar</button><button class="btn pri" id="v_salvar">Salvar alterações</button></div>
-    ${adm ? `<div class="zona-estorno"><div><b>Estornar venda</b><div class="sub" style="color:var(--muted)">Devolve os produtos ao estoque e marca a venda como estornada. Não pode ser desfeito.</div></div>
+    ${true ? `<div class="zona-estorno"><div><b>Estornar venda</b><div class="sub" style="color:var(--muted)">Devolve os produtos ao estoque e marca a venda como estornada. Não pode ser desfeito.</div></div>
       <div class="field"><label for="v_mot">Motivo do estorno (opcional)</label><input id="v_mot" placeholder="Ex.: cliente desistiu, troca, erro de lançamento"></div>
-      <button type="button" class="btn danger-solid" id="v_estornar">Estornar venda</button></div>` : '<div class="sub" style="color:var(--muted)">Estorno: peça ao administrador.</div>'}
+      <button type="button" class="btn danger-solid" id="v_estornar">Estornar venda</button></div>` : ''}
   </form>`;
   m.hidden = false;
   $('#fvenda').onsubmit = async ev => {
@@ -381,12 +381,21 @@ function abrirVenda(v) {
     toast('Venda atualizada'); fechar(); recarregar(['vendas']);
   };
   const be = $('#v_estornar');
-  if (be) be.onclick = async () => {
-    if (be.dataset.conf !== '1') { be.dataset.conf = '1'; be.textContent = `Confirmar estorno de ${brl(v.total)}`; return; }
-    be.disabled = true; be.textContent = 'Estornando…';
-    const { error } = await sb.rpc('estornar_venda', { p_id: v.id, p_motivo: $('#v_mot').value });
-    if (error) { toast(msgErro(error)); be.disabled = false; be.dataset.conf = ''; be.textContent = 'Estornar venda'; return; }
-    toast('Venda estornada e produtos devolvidos ao estoque'); fechar(); recarregar(['produtos', 'vendas']);
+  if (be) be.onclick = () => {
+    const pop = document.createElement('div'); pop.className = 'confirma'; pop.setAttribute('role', 'alertdialog'); pop.setAttribute('aria-modal', 'true');
+    pop.innerHTML = `<div class="confirma-box"><h2 class="confirma-tit">Tem certeza que deseja fazer o estorno?</h2>
+      <p>A venda de <b>${brl(v.total)}</b> será marcada como estornada e os produtos voltarão para o estoque. Isso não pode ser desfeito.</p>
+      <div class="row"><button type="button" class="btn" id="c_nao">Não</button><button type="button" class="btn danger-solid" id="c_sim">Sim, estornar</button></div></div>`;
+    m.appendChild(pop); $('#c_nao').focus();
+    const fecharPop = () => pop.remove();
+    pop.onclick = ev => { if (ev.target === pop) fecharPop(); };
+    $('#c_nao').onclick = fecharPop;
+    $('#c_sim').onclick = async () => {
+      const sim = $('#c_sim'); sim.disabled = true; sim.textContent = 'Estornando…'; $('#c_nao').disabled = true;
+      const { error } = await sb.rpc('estornar_venda', { p_id: v.id, p_motivo: $('#v_mot').value });
+      if (error) { toast(msgErro(error)); fecharPop(); return; }
+      toast('Venda estornada e produtos devolvidos ao estoque'); fechar(); recarregar(['produtos', 'vendas']);
+    };
   };
 }
 function abrirInstalar() {
@@ -487,7 +496,7 @@ document.addEventListener('change', ev => {
   const t = ev.target;
   if (t.id === 'pag') S.form.pag = t.value; else if (t.id === 'canal') S.form.canal = t.value; else if (t.id === 'desc') render();
 });
-document.addEventListener('keydown', ev => { if (ev.key !== 'Escape') return; if (!$('#modal').hidden) fechar(); else fecharMenu(); });
+document.addEventListener('keydown', ev => { if (ev.key !== 'Escape') return; const pop = document.querySelector('.confirma'); if (pop) { pop.remove(); return; } if (!$('#modal').hidden) fechar(); else fecharMenu(); });
 addEventListener('hashchange', () => { S.confirm = null; fecharMenu(); render(); scrollTo(0, 0); });
 addEventListener('resize', () => { if (!celular()) fecharMenu(); });
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; render(); });
