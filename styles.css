@@ -192,4 +192,7 @@ body:has(#modal:not([hidden])) #toast{top:calc(env(safe-area-inset-top,0px) + 16
 .confirma{position:fixed;inset:0;z-index:50;background:rgba(10,8,14,.55);display:flex;align-items:center;justify-content:center;padding:16px}
 .confirma-box{background:var(--surface);border-radius:14px;max-width:400px;width:100%;padding:22px;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
 .confirma-tit{font-family:var(--display);font-size:24px;font-weight:600;line-height:1.15;margin:0;text-transform:none;letter-spacing:0;color:var(--ink)}
-.confirma-box p{margin:0;color:var(--muted)}
+.confirma-box p,.confirma-txt{margin:0;color:var(--muted)}
+.confirma-lista{margin:0;padding-left:18px;color:var(--ink);max-height:40vh;overflow:auto}
+.confirma-resumo{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.confirma-resumo b{font-family:var(--display);font-size:26px;color:var(--ink)}

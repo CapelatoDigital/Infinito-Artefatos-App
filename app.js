@@ -1,6 +1,6 @@
 'use strict';
 /* App Infinito Artefatos — estoque e vendas (Supabase) */
-const VERSAO = '2026-11-02.8'; // mudar junto com version.json a cada publicação
+const VERSAO = '2026-11-02.9'; // mudar junto com version.json a cada publicação
 
 const CATS = ['Pulseiras', 'Colares', 'Incensos', 'Chaveiros', 'Pedras', 'Outros'];
 const PAGS = ['Pix', 'Dinheiro', 'Cartão de débito', 'Cartão de crédito'];
@@ -381,21 +381,13 @@ function abrirVenda(v) {
     toast('Venda atualizada'); fechar(); recarregar(['vendas']);
   };
   const be = $('#v_estornar');
-  if (be) be.onclick = () => {
-    const pop = document.createElement('div'); pop.className = 'confirma'; pop.setAttribute('role', 'alertdialog'); pop.setAttribute('aria-modal', 'true');
-    pop.innerHTML = `<div class="confirma-box"><h2 class="confirma-tit">Tem certeza que deseja fazer o estorno?</h2>
-      <p>A venda de <b>${brl(v.total)}</b> será marcada como estornada e os produtos voltarão para o estoque. Isso não pode ser desfeito.</p>
-      <div class="row"><button type="button" class="btn" id="c_nao">Não</button><button type="button" class="btn danger-solid" id="c_sim">Sim, estornar</button></div></div>`;
-    m.appendChild(pop); $('#c_nao').focus();
-    const fecharPop = () => pop.remove();
-    pop.onclick = ev => { if (ev.target === pop) fecharPop(); };
-    $('#c_nao').onclick = fecharPop;
-    $('#c_sim').onclick = async () => {
-      const sim = $('#c_sim'); sim.disabled = true; sim.textContent = 'Estornando…'; $('#c_nao').disabled = true;
-      const { error } = await sb.rpc('estornar_venda', { p_id: v.id, p_motivo: $('#v_mot').value });
-      if (error) { toast(msgErro(error)); fecharPop(); return; }
-      toast('Venda estornada e produtos devolvidos ao estoque'); fechar(); recarregar(['produtos', 'vendas']);
-    };
+  if (be) be.onclick = async () => {
+    const ok = await confirmar({ titulo: 'Tem certeza que deseja fazer o estorno?', texto: `<p>A venda de <b>${brl(v.total)}</b> será marcada como estornada e os produtos voltarão para o estoque. Isso não pode ser desfeito.</p>`, sim: 'Sim, estornar', perigo: true });
+    if (!ok) return;
+    be.disabled = true; be.textContent = 'Estornando…';
+    const { error } = await sb.rpc('estornar_venda', { p_id: v.id, p_motivo: $('#v_mot').value });
+    if (error) { toast(msgErro(error)); be.disabled = false; be.textContent = 'Estornar venda'; return; }
+    toast('Venda estornada e produtos devolvidos ao estoque'); fechar(); recarregar(['produtos', 'vendas']);
   };
 }
 function abrirInstalar() {
@@ -410,6 +402,21 @@ function alternarMenu() {
   else { const mini = document.body.classList.toggle('mini'); $('#menuBtn').setAttribute('aria-expanded', String(!mini)); try { localStorage.setItem('menuRecolhido', mini ? '1' : '0'); } catch (e) { } }
 }
 function fechar() { $('#modal').hidden = true; $('#modal').innerHTML = ''; }
+
+let resolverConfirma = null;
+function confirmar({ titulo, texto, sim = 'Sim', nao = 'Não', perigo = false }) {
+  fecharConfirma(false);
+  return new Promise(res => {
+    const pop = document.createElement('div'); pop.className = 'confirma'; pop.setAttribute('role', 'alertdialog'); pop.setAttribute('aria-modal', 'true');
+    pop.innerHTML = `<div class="confirma-box"><h2 class="confirma-tit">${titulo}</h2>${texto ? `<div class="confirma-txt">${texto}</div>` : ''}
+      <div class="row"><button type="button" class="btn" data-conf="nao">${nao}</button><button type="button" class="btn ${perigo ? 'danger-solid' : 'pri'}" data-conf="sim">${sim}</button></div></div>`;
+    document.body.appendChild(pop);
+    resolverConfirma = v => { pop.remove(); resolverConfirma = null; res(v); };
+    pop.addEventListener('click', ev => { const b = ev.target.closest('[data-conf]'); if (b) resolverConfirma(b.dataset.conf === 'sim'); else if (ev.target === pop) resolverConfirma(false); });
+    pop.querySelector('[data-conf="nao"]').focus();
+  });
+}
+function fecharConfirma(v) { if (resolverConfirma) resolverConfirma(v); }
 
 /* ---------- ações ---------- */
 async function registrarVenda() {
@@ -444,7 +451,14 @@ document.addEventListener('click', async ev => {
     else if (a === 'continuarComprando') { const pr = $('#produtos'); (pr || document.body).scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('#busca')?.focus({ preventScroll: true }), 400); }
     else if (a === 'add') { const p = prod(id); const q = (S.carrinho[id] || 0) + 1; if (q > (+p.estoque || 0)) { toast('Estoque insuficiente'); return; } S.carrinho[id] = q; render(); }
     else if (a === 'dec') { S.carrinho[id] = (S.carrinho[id] || 0) - 1; if (S.carrinho[id] <= 0) delete S.carrinho[id]; render(); }
-    else if (a === 'vender') registrarVenda();
+    else if (a === 'vender') {
+      const c = cartTotals(); if (!c.it.length || busy) return;
+      const lista = c.it.map(x => `<li>${x.q}× ${esc(x.p.nome)}${x.p.variacao ? ' · ' + esc(x.p.variacao) : ''}</li>`).join('');
+      const ok = await confirmar({ titulo: 'Tem certeza que deseja finalizar a venda?',
+        texto: `<ul class="confirma-lista">${lista}</ul><div class="confirma-resumo"><span>${esc(S.form.pag)} · ${esc(S.form.canal)}${S.form.cliente.trim() ? ' · ' + esc(S.form.cliente.trim()) : ''}${c.d ? ' · desconto ' + brl(c.d) : ''}</span><b>${brl(c.tot)}</b></div>`,
+        sim: 'Sim, finalizar' });
+      if (ok) registrarVenda();
+    }
     else if (a === 'novo') abrirProduto();
     else if (a === 'editar') abrirProduto(prod(id));
     else if (a === 'entrada') abrirEntrada(prod(id));
@@ -496,7 +510,7 @@ document.addEventListener('change', ev => {
   const t = ev.target;
   if (t.id === 'pag') S.form.pag = t.value; else if (t.id === 'canal') S.form.canal = t.value; else if (t.id === 'desc') render();
 });
-document.addEventListener('keydown', ev => { if (ev.key !== 'Escape') return; const pop = document.querySelector('.confirma'); if (pop) { pop.remove(); return; } if (!$('#modal').hidden) fechar(); else fecharMenu(); });
+document.addEventListener('keydown', ev => { if (ev.key !== 'Escape') return; if (resolverConfirma) { fecharConfirma(false); return; } if (!$('#modal').hidden) fechar(); else fecharMenu(); });
 addEventListener('hashchange', () => { S.confirm = null; fecharMenu(); render(); scrollTo(0, 0); });
 addEventListener('resize', () => { if (!celular()) fecharMenu(); });
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; render(); });
