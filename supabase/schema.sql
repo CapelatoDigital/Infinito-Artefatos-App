@@ -95,7 +95,7 @@ drop policy if exists produtos_editar on public.produtos;
 drop policy if exists produtos_apagar on public.produtos;
 create policy produtos_ler    on public.produtos for select to authenticated using (eh_membro());
 create policy produtos_criar  on public.produtos for insert to authenticated with check (eh_membro());
-create policy produtos_editar on public.produtos for update to authenticated using (eh_admin()) with check (eh_admin());
+create policy produtos_editar on public.produtos for update to authenticated using (eh_membro()) with check (eh_membro());
 create policy produtos_apagar on public.produtos for delete to authenticated using (eh_admin());
 
 drop policy if exists vendas_ler on public.vendas;

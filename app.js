@@ -98,7 +98,7 @@ function vEstoque() {
   const rows = ps.map(p => {
     const [k, l] = nivel(p); const conf = S.confirm === p.id;
     return `<div class="item">${thumb(p)}<div class="main"><div class="nm">${esc(p.nome)}${p.variacao ? ' · ' + esc(p.variacao) : ''}</div><div class="sub">${esc(p.categoria)}${p.fornecedor ? ' · fornecedor ' + esc(p.fornecedor) : ''} · custo ${brl(p.custo)} · venda ${brl(p.preco)}</div>${p.descricao ? `<div class="sub desc">${esc(p.descricao)}</div>` : ''}</div><span class="pill ${k}">${l}</span>
-    <div class="acts"><button class="btn sm" data-act="entrada" data-id="${p.id}">+ Entrada</button>${adm ? `<button class="btn sm" data-act="editar" data-id="${p.id}">Editar</button><button class="btn sm danger" data-act="excluir" data-id="${p.id}">${conf ? 'Confirmar exclusão' : 'Excluir'}</button>` : ''}</div></div>`;
+    <div class="acts"><button class="btn sm" data-act="entrada" data-id="${p.id}">+ Entrada</button><button class="btn sm" data-act="editar" data-id="${p.id}">Editar</button>${adm ? `<button class="btn sm danger" data-act="excluir" data-id="${p.id}">${conf ? 'Confirmar exclusão' : 'Excluir'}</button>` : ''}</div></div>`;
   }).join('');
   return `<div class="head"><div><h1>Estoque</h1><div class="sub" style="color:var(--muted)">${S.produtos.length} produtos · ${un} unidades · ${brl(val)} em custo</div></div><button class="btn pri" data-act="novo">Novo produto</button></div>
   <div class="chips">${cats.map(c => `<button class="chip${S.cat === c ? ' on' : ''}" data-act="cat" data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div>
@@ -152,18 +152,18 @@ function vEquipe() {
   const eu = S.user?.email?.toLowerCase();
   const rows = S.membros.map(m => {
     const conf = S.confirm === 'm:' + m.email; const self = m.email === eu;
-    return `<div class="item"><div class="main"><div class="nm">${esc(m.nome || m.email)}${self ? ' (você)' : ''} <span class="badge${m.ativo ? '' : ' off'}">${m.ativo ? (m.papel === 'admin' ? 'Administrador' : 'Vendedor') : 'Bloqueado'}</span></div><div class="sub mail" style="font-weight:500;color:var(--muted)">${esc(m.email)}</div></div>
-    ${self ? '' : `<div class="acts"><button class="btn sm" data-act="papel" data-e="${esc(m.email)}">${m.papel === 'admin' ? 'Tornar vendedor' : 'Tornar administrador'}</button><button class="btn sm" data-act="ativo" data-e="${esc(m.email)}">${m.ativo ? 'Bloquear' : 'Desbloquear'}</button><button class="btn sm danger" data-act="remover" data-e="${esc(m.email)}">${conf ? 'Confirmar remoção' : 'Remover'}</button></div>`}</div>`;
+    return `<div class="item"><div class="main"><div class="nm">${esc(m.nome || m.email)}${self ? ' (você)' : ''} <span class="badge${m.ativo ? '' : ' off'}">${m.ativo ? (m.papel === 'admin' ? 'Administrador' : 'Equipe') : 'Bloqueado'}</span></div><div class="sub mail" style="font-weight:500;color:var(--muted)">${esc(m.email)}</div></div>
+    ${self ? '' : `<div class="acts"><button class="btn sm" data-act="papel" data-e="${esc(m.email)}">${m.papel === 'admin' ? 'Tornar equipe' : 'Tornar administrador'}</button><button class="btn sm" data-act="ativo" data-e="${esc(m.email)}">${m.ativo ? 'Bloquear' : 'Desbloquear'}</button><button class="btn sm danger" data-act="remover" data-e="${esc(m.email)}">${conf ? 'Confirmar remoção' : 'Remover'}</button></div>`}</div>`;
   }).join('');
   return `<div class="head"><div><h1>Equipe</h1><div class="sub" style="color:var(--muted)">Só entra no app quem estiver nesta lista, com a conta Google do e-mail cadastrado.</div></div></div>
   <section class="panel"><h2>Adicionar pessoa</h2>
     <form class="addm" id="fmembro">
       <div class="field"><label for="m_email">E-mail Google</label><input id="m_email" type="email" required placeholder="nome@gmail.com" autocomplete="off"></div>
       <div class="field"><label for="m_nome">Nome</label><input id="m_nome" placeholder="Ex.: Jéssica"></div>
-      <div class="field"><label for="m_papel">Acesso</label><select id="m_papel"><option value="vendedor">Vendedor</option><option value="admin">Administrador</option></select></div>
+      <div class="field"><label for="m_papel">Acesso</label><select id="m_papel"><option value="vendedor">Equipe</option><option value="admin">Administrador</option></select></div>
       <button class="btn pri">Adicionar</button>
     </form>
-    <div class="sub" style="color:var(--muted);margin-bottom:6px">Vendedor registra vendas, cadastra produtos e lança entradas. Administrador também edita preços, exclui produtos, cancela vendas e gerencia a equipe.</div>
+    <div class="sub" style="color:var(--muted);margin-bottom:6px">Equipe (vendedor): vende, lança entradas, vê vendas e resumo, cadastra e edita produtos, fotos e preços. Administrador: também exclui produtos, cancela vendas e gerencia a equipe.</div>
     <div class="list">${rows}</div></section>`;
 }
 

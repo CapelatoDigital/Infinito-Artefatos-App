@@ -14,7 +14,7 @@ Controle de estoque e lançamento de vendas da Infinito Artefatos. Funciona como
 | `config.js` | Endereço e chave pública do Supabase (**preencher**) |
 | `manifest.webmanifest`, `sw.js`, `icons/` | O que torna o app instalável |
 | `supabase/schema.sql` | Tabelas, regras de acesso e operações de venda/estoque |
-| `supabase/seed-1.sql`, `seed-2.sql` | Os 12 produtos migrados do app anterior (fora do GitHub, porque têm os custos; ficam no .zip) |
+| `supabase/seed-1.sql`, `seed-2.sql` | Os 12 produtos migrados do app anterior |
 | `vercel.json`, `.vercelignore` | Configuração da Vercel |
 
 ---
@@ -58,7 +58,7 @@ Em **Authentication → URL Configuration**:
 ### 5. Primeiro acesso
 
 1. Abra o site e clique em **Entrar com Google** com `capelatodigital@gmail.com` ou `sacerdotefelipecapelato@gmail.com`. Os dois já são administradores.
-2. Na aba **Equipe**, adicione o Gmail da Jéssica e da Cássia como **Vendedor**.
+2. Na aba **Equipe**, adicione o Gmail da Jéssica e da Cássia como **Equipe**.
 3. Mande o endereço do site para elas.
 
 ---
@@ -71,11 +71,11 @@ Em **Authentication → URL Configuration**:
 
 ## Quem pode o quê
 
-| | Vendedor | Administrador |
+| | Equipe | Administrador |
 |---|:-:|:-:|
 | Registrar vendas | ✓ | ✓ |
 | Cadastrar produto e lançar entrada | ✓ | ✓ |
-| Editar preço, foto e dados do produto | | ✓ |
+| Editar preço, foto e dados do produto | ✓ | ✓ |
 | Excluir produto e cancelar venda | | ✓ |
 | Gerenciar a equipe | | ✓ |
 
