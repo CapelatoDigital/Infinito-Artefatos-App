@@ -187,3 +187,5 @@ body:has(#modal:not([hidden])) #toast{top:calc(env(safe-area-inset-top,0px) + 16
 .zona-estorno{border:1px solid var(--bad-soft);background:color-mix(in srgb,var(--bad-soft) 55%,transparent);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-top:6px}
 .btn.danger-solid{background:var(--bad);border-color:var(--bad);color:#fff}
 .btn.danger-solid:hover{filter:brightness(1.05)}
+#produtos{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 80px)}
+#carrinho{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 80px)}

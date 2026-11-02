@@ -1,6 +1,6 @@
 'use strict';
 /* App Infinito Artefatos — estoque e vendas (Supabase) */
-const VERSAO = '2026-11-02.6'; // mudar junto com version.json a cada publicação
+const VERSAO = '2026-11-02.7'; // mudar junto com version.json a cada publicação
 
 const CATS = ['Pulseiras', 'Colares', 'Incensos', 'Chaveiros', 'Pedras', 'Outros'];
 const PAGS = ['Pix', 'Dinheiro', 'Cartão de débito', 'Cartão de crédito'];
@@ -74,7 +74,7 @@ function vVender() {
     : '<div class="empty">Toque em um produto para adicionar.</div>';
   return `<div class="head"><h1>Nova venda</h1></div>
   <div class="grid2">
-    <section class="panel"><h2>Produtos</h2><div class="field" style="margin-bottom:8px"><input id="busca" type="search" placeholder="Buscar por nome, pedra ou categoria" value="${esc(S.busca)}"></div><div class="list">${lista}</div></section>
+    <section class="panel" id="produtos"><h2>Produtos</h2><div class="field" style="margin-bottom:8px"><input id="busca" type="search" placeholder="Buscar por nome, pedra ou categoria" value="${esc(S.busca)}"></div><div class="list">${lista}</div></section>
     <section class="panel sticky" id="carrinho"><h2>Carrinho</h2><div class="list">${cart}</div>
       <div class="row" style="margin-top:12px">
         <div class="field"><label for="pag">Pagamento</label><select id="pag">${opts(PAGS, S.form.pag)}</select></div>
@@ -86,6 +86,7 @@ function vVender() {
       </div>
       <div class="total"><span>${c.d ? `Subtotal ${brl(c.sub)} · desconto ${brl(c.d)}` : 'Total'}</span><strong id="tot">${brl(c.tot)}</strong></div>
       <button class="btn pri wide" data-act="vender" ${c.it.length && !busy ? '' : 'disabled'} style="margin-top:12px">${busy ? 'Registrando…' : 'Registrar venda'}</button>
+      ${c.it.length ? '<button class="btn wide" data-act="continuarComprando" style="margin-top:8px">Continuar comprando</button>' : ''}
     </section>
   </div>`;
 }
@@ -431,6 +432,7 @@ document.addEventListener('click', async ev => {
     else if (a === 'instalar') { if (installEvt) { installEvt.prompt(); await installEvt.userChoice; installEvt = null; render(); } else abrirInstalar(); }
     else if (a === 'escolher') abrirEscolha(prod(id));
     else if (a === 'finalizar') { fechar(); irParaCarrinho(); }
+    else if (a === 'continuarComprando') { const pr = $('#produtos'); (pr || document.body).scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('#busca')?.focus({ preventScroll: true }), 400); }
     else if (a === 'add') { const p = prod(id); const q = (S.carrinho[id] || 0) + 1; if (q > (+p.estoque || 0)) { toast('Estoque insuficiente'); return; } S.carrinho[id] = q; render(); }
     else if (a === 'dec') { S.carrinho[id] = (S.carrinho[id] || 0) - 1; if (S.carrinho[id] <= 0) delete S.carrinho[id]; render(); }
     else if (a === 'vender') registrarVenda();
