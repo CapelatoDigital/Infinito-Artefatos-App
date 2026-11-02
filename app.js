@@ -227,10 +227,16 @@ async function enviarFoto(blob) {
 // Fotos que vieram do app antigo (guardadas como texto) vão para o Storage na primeira vez que um administrador abre o app.
 async function migrarFotos() {
   if (migrando || !ehAdmin()) return; migrando = true;
-  for (const p of S.produtos.filter(p => p.foto && p.foto.startsWith('data:'))) {
-    try { const blob = await (await fetch(p.foto)).blob(); const url = await enviarFoto(blob); await sb.from('produtos').update({ foto: url }).eq('id', p.id); p.foto = url; } catch (e) { console.warn('Foto não migrada', p.nome, e); }
+  let antigas = {};
+  if (S.produtos.some(p => !p.foto)) { try { const r = await fetch('/migracao/fotos.json', { cache: 'no-store' }); if (r.ok) antigas = await r.json(); } catch (e) { } }
+  let n = 0;
+  for (const p of S.produtos) {
+    const origem = p.foto && p.foto.startsWith('data:') ? p.foto : (!p.foto ? antigas[p.nome + '|' + (p.variacao || '')] : null);
+    if (!origem) continue;
+    try { const blob = await (await fetch(origem)).blob(); const url = await enviarFoto(blob); const { error } = await sb.from('produtos').update({ foto: url }).eq('id', p.id); if (error) throw error; p.foto = url; n++; } catch (e) { console.warn('Foto não migrada', p.nome, e); }
   }
   migrando = false;
+  if (n) { toast(`${n} fotos do app antigo foram carregadas`); render(); }
 }
 
 /* ---------- modais ---------- */
