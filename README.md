@@ -83,4 +83,7 @@ As regras ficam no banco de dados (`schema.sql`), não só na tela. Mesmo que al
 
 ## Atualizar o app
 
+A cada publicação, mude o número da versão em **dois lugares iguais**: `version.json` e a constante `VERSAO` no topo do `app.js`. Os aparelhos com o app aberto percebem a versão nova ao voltar para o app (ou em até 10 minutos) e atualizam sozinhos. Se houver uma venda em andamento, aparece um aviso para tocar e atualizar.
+
+
 Cada alteração enviada ao GitHub (branch `main`) é publicada automaticamente pela Vercel em cerca de 1 minuto. Quem tem o app instalado recebe a versão nova ao reabrir.

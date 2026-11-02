@@ -154,3 +154,4 @@ body.mini #side a{justify-content:center;padding:11px 0}
 .brand img{height:50px;width:auto;display:block}
 .logo-escuro{display:none!important}
 @media (prefers-color-scheme:dark){.logo-claro{display:none!important}.logo-escuro{display:block!important}}
+.aviso-versao{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 74px);z-index:45;background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:10px 18px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.2);max-width:92vw}

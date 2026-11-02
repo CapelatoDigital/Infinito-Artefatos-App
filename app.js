@@ -1,5 +1,6 @@
 'use strict';
 /* App Infinito Artefatos — estoque e vendas (Supabase) */
+const VERSAO = '2026-11-02.1'; // mudar junto com version.json a cada publicação
 
 const CATS = ['Pulseiras', 'Colares', 'Incensos', 'Chaveiros', 'Pedras', 'Outros'];
 const PAGS = ['Pix', 'Dinheiro', 'Cartão de débito', 'Cartão de crédito'];
@@ -324,6 +325,7 @@ document.addEventListener('click', async ev => {
     }
     else if (a === 'logout') { await sb.auth.signOut(); S.user = null; S.membro = null; S.fase = 'login'; render(); }
     else if (a === 'menu') alternarMenu();
+    else if (a === 'atualizar') aplicarAtualizacao();
     else if (a === 'recarregar') { iniciarSessao(S.user); }
     else if (a === 'instalar') { if (installEvt) { installEvt.prompt(); await installEvt.userChoice; installEvt = null; render(); } else abrirInstalar(); }
     else if (a === 'add') { const p = prod(id); const q = (S.carrinho[id] || 0) + 1; if (q > (+p.estoque || 0)) { toast('Estoque insuficiente'); return; } S.carrinho[id] = q; render(); }
@@ -385,6 +387,41 @@ addEventListener('resize', () => { if (!celular()) fecharMenu(); });
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; render(); });
 addEventListener('appinstalled', () => { installEvt = null; render(); toast('App instalado'); });
 
+
+/* ---------- atualização automática ---------- */
+// Confere se há versão nova ao abrir, ao voltar para o app e a cada 10 minutos.
+// Atualiza sozinho se não houver venda em andamento; senão, mostra um aviso para tocar e atualizar.
+let novaVersao = null;
+function podeRecarregar() { return !Object.keys(S.carrinho).length && $('#modal').hidden && !busy; }
+async function aplicarAtualizacao() {
+  try { const reg = await navigator.serviceWorker?.getRegistration(); await reg?.update(); } catch (e) { }
+  try { if (sessionStorage.getItem('recarregouPara') === novaVersao) return; sessionStorage.setItem('recarregouPara', novaVersao); } catch (e) { }
+  location.reload();
+}
+async function verificarVersao() {
+  try {
+    const r = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const { versao } = await r.json();
+    if (!versao || versao === VERSAO) return;
+    novaVersao = versao;
+    if (podeRecarregar()) aplicarAtualizacao();
+    else mostrarAvisoVersao();
+  } catch (e) { }
+}
+function mostrarAvisoVersao() {
+  if ($('#avisoVersao')) return;
+  const b = document.createElement('button'); b.id = 'avisoVersao'; b.className = 'aviso-versao'; b.dataset.act = 'atualizar';
+  b.textContent = 'Nova versão do app disponível · toque para atualizar'; document.body.appendChild(b);
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') verificarVersao(); });
+addEventListener('focus', verificarVersao);
+setInterval(verificarVersao, 10 * 60 * 1000);
+if ('serviceWorker' in navigator) {
+  let jaTinha = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (jaTinha && podeRecarregar()) location.reload(); jaTinha = true; });
+}
+
 /* ---------- dados ---------- */
 function recarregar(quais) { return buscar(quais).catch(e => toast(msgErro(e))); }
 async function buscar(quais = ['produtos', 'vendas', 'membros']) {
@@ -434,7 +471,8 @@ async function iniciarSessao(user) {
 
 (function init() {
   try { if (localStorage.getItem('menuRecolhido') === '1') document.body.classList.add('mini'); } catch (e) { }
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => { });
+  verificarVersao();
   const cfg = window.CONFIG || {};
   if (!window.supabase || !cfg.SUPABASE_URL || cfg.SUPABASE_URL.startsWith('COLE_AQUI')) { S.fase = 'config'; render(); return; }
   sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, { auth: { flowType: 'pkce', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
